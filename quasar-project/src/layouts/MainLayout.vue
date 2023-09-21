@@ -11,25 +11,17 @@
           @click="toggleLeftDrawer"
         />
 
-        <q-toolbar-title>
-          ARCHIBOX
-        </q-toolbar-title>
+        <q-toolbar-title> ARCHIBOX </q-toolbar-title>
 
-        <div> {{ $q.version }}</div>
+        <div class="q-pa-md q-gutter-sm">
+          <q-btn to="/" color="primary" label="Déconnexion" />
+        </div>
       </q-toolbar>
     </q-header>
 
-    <q-drawer
-      v-model="leftDrawerOpen"
-      show-if-above
-      bordered
-    >
+    <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
       <q-list>
-        <q-item-label
-          header
-        >Les fonctionnalités disponibles
-          
-        </q-item-label>
+        <q-item-label header>Les fonctionnalités disponibles </q-item-label>
 
         <EssentialLink
           v-for="link in essentialLinks"
@@ -46,49 +38,53 @@
 </template>
 
 <script>
-import { defineComponent, ref } from 'vue'
-import EssentialLink from 'components/EssentialLink.vue'
+import { defineComponent, ref } from "vue";
+import EssentialLink from "components/EssentialLink.vue";
 
 const linksList = [
   {
-    title: 'Clients',
-    
-    icon: 'school',
-    link: ' #/Client'
+    title: "Accueil",
+
+    icon: "school",
+    link: " #/Home-page",
   },
   {
-    title: 'Archives',
-    
-    icon: 'code',
-    link: ''
+    title: "Clients",
+
+    icon: "school",
+    link: " #/Client",
   },
   {
-    title: 'Services et tarifications',
-    
-    icon: 'chat',
-    link: ''
+    title: "Archives",
+
+    icon: "code",
+    link: "",
   },
-  
-  
-]
+  {
+    title: "Services et tarifications",
+
+    icon: "chat",
+    link: "",
+  },
+];
 
 export default defineComponent({
-  name: 'MainLayout',
+  name: "MainLayout",
 
   components: {
-    EssentialLink
+    EssentialLink,
   },
 
-  setup () {
-    const leftDrawerOpen = ref(false)
+  setup() {
+    const leftDrawerOpen = ref(false);
 
     return {
       essentialLinks: linksList,
       leftDrawerOpen,
-      toggleLeftDrawer () {
-        leftDrawerOpen.value = !leftDrawerOpen.value
-      }
-    }
-  }
-})
+      toggleLeftDrawer() {
+        leftDrawerOpen.value = !leftDrawerOpen.value;
+      },
+    };
+  },
+});
 </script>

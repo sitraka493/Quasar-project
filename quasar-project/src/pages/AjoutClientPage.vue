@@ -26,6 +26,7 @@
           type="submit"
         />
         <q-btn
+          to="Client"
           style="margin-left: 50px"
           label="Annuler"
           type="reset"

@@ -35,7 +35,7 @@
 
             <div>
               <q-btn
-                @click="login"
+                to="Home-page"
                 style="margin-left: 100px"
                 label="Se connecter"
                 type="submit"
