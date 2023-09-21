@@ -18,5 +18,25 @@ export const useClientStore = defineStore('client', {
             })
              
         },
+        addClient(client) {
+            api.post("clients",client).then((res) => {
+                this.clients = res.data
+                console.log(this.clients)
+            })
+        },
+        updateClient(id,client) {
+            api.put("clients/"+id,client).then((res) => {
+                this.clients = res.data
+                console.log(this.clients)
+            })
+             
+        },
+        deleteClient(id) {
+            api.delete("clients/"+id).then((res) => {
+                this.clients = res.data
+                console.log(this.clients)
+            })
+             
+        },
     },
 });
