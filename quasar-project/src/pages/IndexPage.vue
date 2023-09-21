@@ -61,8 +61,6 @@
 import { defineComponent } from "vue";
 import { useQuasar } from "quasar";
 import { ref } from "vue";
-import PersonIcon from "@mui/icons-material/Person";
-import LockIcon from "@mui/icons-material/Person";
 
 export default {
   setup() {
@@ -71,11 +69,14 @@ export default {
     const username = ref(null);
     const password = ref(null);
 
+    function login(){
+
+    }
+
     return {
       username,
       password,
-      PersonIcon,
-      LockIcon,
+      login,
       onSubmit() {
         {
           $q.notify({
