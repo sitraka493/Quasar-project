@@ -37,5 +37,6 @@ export default defineComponent({
       default: "",
     },
   },
+  slots: ["default"],
 });
 </script>

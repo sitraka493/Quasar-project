@@ -1,18 +1,18 @@
 <template>
   <div class="q-px-lg q-mb-md">
     <div class="text-h6 text-center q-py-md">
-      Formulaire d'ajout d'un client
+      Formulaire de modification d'un client
     </div>
     <q-card>
       <div class="q-pa-md">
-        <q-form @submit.stop="onSubmit" @reset="onReset" class="q-pa-md">
+        <q-form @submit.stop="onModif" @reset="onReset2" class="q-pa-md">
           <div class="q-gutter-md">
             <div class="row">
               <div class="col">
                 <q-input
                   filled
-                  v-model="clientItem.nomClient"
-                  label="Nom du client"
+                  v-model="client.nomClient"
+                  label=""
                   margin-left="200px"
                 />
               </div>
@@ -20,7 +20,7 @@
               <div class="col">
                 <q-input
                   filled
-                  v-model="clientItem.tel_client"
+                  v-model="client.tel_client"
                   label="Numéro de Téléphone"
                 />
               </div>
@@ -29,7 +29,7 @@
               <div class="col">
                 <q-input
                   filled
-                  v-model="clientItem.adresse_client"
+                  v-model="client.adresse_client"
                   label="Adresse du client"
                 />
               </div>
@@ -37,7 +37,7 @@
               <div class="col">
                 <q-input
                   filled
-                  v-model="clientItem.date_contrat"
+                  v-model="client.date_contrat"
                   label="Selectionnez une date"
                 >
                   <template v-slot:prepend>
@@ -48,8 +48,8 @@
                         transition-hide="scale"
                       >
                         <q-date
-                          v-model="clientItem.date_contrat"
-                          mask="DD-MM-YYYY "
+                          v-model="client.date_contrat"
+                          mask="YYYY-MM-DD "
                         >
                           <div class="row items-center justify-end">
                             <q-btn
@@ -71,14 +71,10 @@
 
             <div class="row">
               <div class="col">
-                <q-input
-                  filled
-                  v-model="clientItem.email_client"
-                  label="Email"
-                />
+                <q-input filled v-model="client.email_client" label="Email" />
               </div>
               <div class="col">
-                <q-input filled v-model="clientItem.fax_client" label="Fax" />
+                <q-input filled v-model="client.fax_client" label="Fax" />
               </div>
             </div>
 
@@ -86,7 +82,7 @@
               <div class="col">
                 <q-select
                   filled
-                  v-model="clientItem.etat_client"
+                  v-model="client.etat_client"
                   :options="options2"
                   label="Situation"
                 />
@@ -95,7 +91,7 @@
               <div class="col">
                 <q-select
                   filled
-                  v-model="clientItem.règlement"
+                  v-model="client.règlement"
                   :options="options"
                   label="Règlement par"
                 />
@@ -105,20 +101,20 @@
             <div class="col">
               <q-input
                 filled
-                v-model="clientItem.codecompt_client"
+                v-model="client.codecompt_client"
                 label="Code comptable"
               />
             </div>
+          </div>
 
-            <p></p>
-
+          <p></p>
+          <div>
             <q-btn
               color="primary"
-              label="Ajouter le client"
+              label="Modifier le client"
               type="submit"
               style="margin-left: 1000px"
             />
-
             <q-btn
               to="Client"
               style="margin-left: 50px"
@@ -138,30 +134,24 @@
 <script>
 import { computed, onMounted, reactive, ref, defineProps } from "vue";
 import { useClientStore } from "src/stores/client-store";
-import { getEmptyClient } from "src/utils/getEmptyClient";
-import router from "src/router";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useQuasar } from "quasar";
 
 export default {
-  props: {
-    client: {
-      type: Object,
-      default: getEmptyClient(),
-    },
-  },
-  setup(props) {
+  setup() {
     const clientStore = useClientStore();
-    const clientItem = ref(props.client);
+    const route = useRoute();
     const router = useRouter();
+    const clientId = route.params.id;
     const $q = useQuasar();
-
-    async function onSubmit() {
-      console.log("essai", clientItem.value);
-      await clientStore.addClient(clientItem.value);
-      await clientStore.listAllClient();
+    const client = computed(() => {
+      return clientStore.client;
+    });
+    function onModif() {
+      console.log("essai2", client.value);
+      clientStore.updateClient(clientId, client.value);
       $q.notify({
-        message: "Client ajouté avec succès",
+        message: "Client modifié succès",
         color: "positive",
         position: "bottom",
         timeout: 3000,
@@ -169,18 +159,13 @@ export default {
       router.push("/Client");
     }
 
-    /*const isAnyFieldEmpty = computed(() => {
-      for (const key in client) {
-        if (!client[key]) {
-          return true; // Return true if any field is empty
-        }
-      }
-      return false; // Return false if all fields are non-empty
-    });*/
+    onMounted(async () => {
+      await clientStore.getOneclient(clientId);
+    });
+
     return {
-      filter: ref(""),
-      clientItem,
-      onSubmit,
+      client,
+      onModif,
       date: ref("2023/11/01"),
       model: ref(null),
       options: [
@@ -192,6 +177,10 @@ export default {
       ],
       model2: ref(null),
       options2: ["Actif", "Passif"],
+      onReset2() {
+        username.value = null;
+        password.value = null;
+      },
     };
   },
 };

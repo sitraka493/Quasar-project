@@ -1,24 +1,19 @@
 <template margin-left="20px">
   <q-card style="margin-top: 100px color: ;"
-    ><h3 class="text-center">Gestion des services</h3>
+    ><h3 class="text-center">Gestion des contrats</h3>
   </q-card>
   <div class="q-pa-md q-gutter-y-md column items-start">
     <q-btn-group push>
       <q-btn
         push
-        label="Gérer famille"
-        icon="group"
-        to="/FamilleServices"
-        title="Manage Family"
+        label="Gérer client"
+        icon="person"
+        to="/Client"
+        title="Manage Clients"
       />
 
-      <q-btn push label="Gérer Service" icon="assignment" to="Services" />
-      <q-btn
-        push
-        label="Gérer Tarifications"
-        icon="margin"
-        to="/Tarifications"
-      />
+      <q-btn push label="Gérer Contrat" icon="mediation" to="Contrat" />
+      <q-btn push label="Gérer utilisateurs" icon="people" to="/Users" />
     </q-btn-group>
   </div>
   <div style="margin-bottom: 0px">
@@ -27,8 +22,8 @@
         <q-table
           flat
           bordered
-          title="Liste des services"
-          :rows="services"
+          title="Liste des contrats"
+          :rows="contrats"
           :columns="columns"
           row-key="name"
           :filter="filter"
@@ -44,8 +39,8 @@
                   size="sm"
                   round
                   dense
-                  @click="handleInfoClick(props.row.id_service)"
-                  icon="update"
+                  @click="handleInfoClick(props.row.id_contrat)"
+                  icon="task"
                   text-color="primary"
                 />
               </q-td>
@@ -55,7 +50,7 @@
                   size="sm"
                   round
                   dense
-                  @click="handleDeleteClick(props.row.id_service)"
+                  @click="handleDeleteClick(props.row.id_contrat)"
                   icon="delete"
                   text-color="primary"
                 />
@@ -74,7 +69,7 @@
               <q-th v-for="col in props.cols" :key="col.name" :props="props">
                 {{ col.label }}
               </q-th>
-              <q-th>Modifier</q-th>
+              <q-th>Télécharger</q-th>
               <q-th>Supprimer</q-th>
             </q-tr>
           </template>
@@ -147,7 +142,7 @@
               color="primary"
               icon="add"
               label=""
-              @click="addService = true"
+              @click="addContrat = true"
             />
             <q-space />
             <q-input
@@ -162,11 +157,11 @@
               </template>
             </q-input>
 
-            <q-dialog v-model="addService" @show="fetchFamilleList" persistent>
+            <q-dialog v-model="addContrat" @show="fetchClientsList" persistent>
               <q-card style="min-width: 350px">
                 <q-form @submit="onSubmit">
                   <q-card-section>
-                    <div class="text-h6">Formulaire d'ajout d'un service</div>
+                    <div class="text-h6">Formulaire d'ajout d'un contrat</div>
                   </q-card-section>
 
                   <q-card-section class="q-pt-none">
@@ -174,8 +169,8 @@
                       <q-select
                         filled
                         v-model="model"
-                        :options="familleList"
-                        label="Veuillez choisir la famille du service"
+                        :options="clientsList"
+                        label="Veuillez choisir le client"
                         emit-value
                         map-options
                       />
@@ -183,8 +178,8 @@
                     <div class="q-mb-md">
                       <q-input
                         filled
-                        v-model="nom_service"
-                        label="service"
+                        v-model="Intitulé"
+                        label="Intitulé"
                         autofocus
                         @keyup.enter="prompt = false"
                       />
@@ -192,18 +187,8 @@
                     <div class="q-mb-md">
                       <q-input
                         filled
-                        v-model="codecompt_service"
-                        label="code compte"
-                        autofocus
-                        @keyup.enter="prompt = false"
-                      />
-                    </div>
-
-                    <div class="q-mb-md">
-                      <q-input
-                        filled
-                        v-model="tva"
-                        label="TVA"
+                        v-model="description"
+                        label="Description"
                         autofocus
                         @keyup.enter="prompt = false"
                       />
@@ -214,59 +199,6 @@
                       <q-btn flat label="Ajouter" type="submit" v-close-popup />
                     </q-card-actions>
                   </q-card-section>
-                </q-form>
-              </q-card>
-            </q-dialog>
-            <q-dialog
-              v-model="handleUpdateModal"
-              @show="fetchFamilleList"
-              persistent
-            >
-              <q-card style="min-width: 350px">
-                <q-form @submit.stop="onModifService" class="q-pa-md">
-                  <q-card-section>
-                    <div class="text-h6">Formulaire de modification</div>
-                  </q-card-section>
-
-                  <q-card-section class="q-pt-none">
-                    <q-input
-                      filled
-                      label="Nom du service"
-                      v-model="nom_service"
-                    />
-                  </q-card-section>
-                  <q-card-section class="q-pt-none">
-                    <q-input
-                      filled
-                      label="code comptable du service"
-                      v-model="codecompt_service"
-                    />
-                  </q-card-section>
-                  <q-card-section class="q-pt-none">
-                    <q-input filled label="TVA" v-model="tva" />
-                  </q-card-section>
-                  <q-card-section class="q-pt-none">
-                    <div class="q-mb-md">
-                      <q-select
-                        filled
-                        v-model="model"
-                        :options="familleList"
-                        label="Veuillez choisir la famille du service"
-                        emit-value
-                        map-options
-                      />
-                    </div>
-                  </q-card-section>
-
-                  <q-card-actions align="right" class="text-primary">
-                    <q-btn flat label="Annuler" v-close-popup />
-                    <q-btn
-                      flat
-                      label="Modifier"
-                      @click="onModifService"
-                      v-close-popup
-                    />
-                  </q-card-actions>
                 </q-form>
               </q-card>
             </q-dialog>
@@ -284,7 +216,7 @@
                     flat
                     label="Confirmer"
                     color="primary"
-                    @click="confirmDeleteService"
+                    @click="confirmDeleteContrat"
                     v-close-popup
                   />
                 </q-card-actions>
@@ -299,198 +231,145 @@
 
 <script>
 import { computed, onMounted, ref } from "vue";
-import { useServiceStore } from "src/stores/service-store.js";
-import { getEmptyService } from "src/utils/getEmptyService.js";
+import { useContratStore } from "src/stores/contrat-store.js";
+import { getEmptyContrat } from "src/utils/getEmptyContrat.js";
 import { useRouter } from "vue-router";
 export default {
   props: {
-    service: {
+    contrat: {
       type: Object,
-      default: getEmptyService(),
+      default: getEmptyContrat(),
     },
   },
 
   setup() {
-    const serviceStore = useServiceStore();
+    const contratStore = useContratStore();
     const computedRows = ref([]);
     const handleDeleteModal = ref(false);
     const model = ref(null);
-    const nom_service = ref("");
-    const tva = ref("");
-    const codecompt_service = ref(null);
-    const serviceItem = ref({
-      nom_service: "",
-      codecompt_service: "",
-      tva: "",
-    });
-    const addService = ref(false);
-    const serviceData = ref(getEmptyService());
+    const Intitulé = ref("");
+    const description = ref("");
+    const contratItem = ref({ id_contrat: null });
+    const addContrat = ref(false);
+    const contratData = ref(getEmptyContrat());
+
     const columns = [
       {
-        name: "id_service",
+        name: "id_client",
         required: true,
-        label: "Id_service",
+        label: "Id_client",
         align: "center",
-        field: "id_service",
+        format: (val) => `${val}`,
         sortable: true,
+        field: (row) =>
+          row.client ? row.client.id_client : "Client non défini",
       },
       {
         name: "nom",
         align: "center",
         label: "Client",
-        field: "nom_service",
+        field: (row) => {
+          console.log("data", row);
+          return row.client ? row.client.nomClient : "";
+        },
         sortable: true,
       },
       {
-        name: "famille",
+        name: "date_contrat",
         align: "center",
-        label: "famille",
-        field: (row) =>
-          row.familleService ? row.familleService.libelle_famille : "",
+        label: "Date contrat",
+        field: (row) => (row.client ? row.client.date_contrat : ""),
         sortable: true,
       },
 
       {
-        name: "code",
+        name: "intitulé",
         align: "center",
-        label: "Code Comptable",
-        field: "codecompt_service",
-      },
-      {
-        name: "tva",
-        align: "center",
-        label: "TVA",
-        field: "tva",
+        label: "Intitulé",
+        field: "intitulé",
       },
     ];
     const router = useRouter();
-    const services = computed(() => {
-      return serviceStore.services;
+    const contrats = computed(() => {
+      return contratStore.contrats;
     });
     async function onSubmit() {
       console.log("données:", model.value);
-      const serviceData = {
-        familleService: {
-          id_famille: model.value,
-        },
-        nom_service: nom_service.value, //le nom de la propriété en fonction de votre API
-        tva: tva.value,
-        codecompt_service: codecompt_service.value,
+      const contratData = {
+        client: {
+          id_client: model.value,
+        }, //le nom de la propriété en fonction de votre API
+        intitulé: Intitulé.value,
+        description: description.value,
       };
 
       try {
-        console.log("avant submit", serviceData);
-        await serviceStore.addService(serviceData);
-        addService.value = false;
-        await serviceStore.listAllService(); // Fermez le modal après ajout
+        console.log("avant submit", contratData);
+        await contratStore.addContrat(contratData);
+        addContrat.value = false;
+        await contratStore.listAllContrat(); // Fermez le modal après ajout
       } catch (error) {
         // Gérer l'erreur (par exemple, afficher un message à l'utilisateur)
         console.error(error);
       }
     }
-    const familleList = ref([]);
+    const clientsList = ref([]);
 
-    async function fetchFamilleList() {
+    async function fetchClientsList() {
       try {
-        const familles = await serviceStore.listAllFamilles();
-        console.log("familles:", familles);
-        familleList.value = familles.map((famille) => ({
-          label: famille.libelle_famille,
-          value: famille.id_famille,
+        const clients = await contratStore.listAllClients();
+        console.log("Clients:", clients);
+        clientsList.value = clients.map((client) => ({
+          label: client.nomClient,
+          value: client.id_client,
         }));
       } catch (error) {
         console.error(error);
       }
     }
-    const handleUpdateModal = ref(false);
 
     async function handleInfoClick(Id) {
-      try {
-        const serviceData = await serviceStore.getOneService(Id);
-        console.log("serviceData", serviceData);
-
-        nom_service.value = serviceData.nom_service;
-        codecompt_service.value = serviceData.codecompt_service;
-        tva.value = serviceData.tva;
-        if (serviceData.familleService) {
-          model.value = serviceData.familleService.id_famille; // Mettez à jour model avec l'ID de la famille
-        }
-        serviceItem.value = {
-          ...serviceData,
-        };
-        handleUpdateModal.value = true;
-      } catch (error) {
-        console.error(
-          "Erreur lors de la récupération des données du site :",
-          error
-        );
-      }
+      await contratStore.getOnecontrat(Id);
+      router.push("/ContratClient/" + Id);
+      console.log("Identifiant du contrat cliqué :", Id);
     }
 
-    async function onModifService() {
-      try {
-        const serviceId = serviceItem.value.id_service; // avoir l'ID du site
-
-        const updatedServiceData = {
-          nom_service: nom_service.value,
-          codecompt_service: codecompt_service.value,
-          tva: tva.value,
-          familleService: {
-            id_famille: model.value,
-          },
-          // ...
-        };
-        if (model.value !== serviceItem.value.familleService.id_famille) {
-          updatedServiceData.familleService = {
-            id_famille: model.value,
-          };
-        }
-        await serviceStore.updateService(serviceId, updatedServiceData);
-        handleUpdateModal.value = false; // Fermez le modal après la mise à jour
-        await serviceStore.listAllService();
-      } catch (error) {
-        console.error("Erreur lors de la mise à jour du service :", error);
-      }
-    }
-
-    function handleDeleteClick(id) {
-      console.log(" id_service:", id);
-      serviceItem.value.id = id;
+    function handleDeleteClick(id_contrat) {
+      console.log(" id_contrat:", id_contrat);
+      contratItem.value.id_contrat = id_contrat;
       handleDeleteModal.value = true;
     }
-    async function confirmDeleteService() {
-      const id_serviceToDelete = serviceItem.value.id;
+    async function confirmDeleteContrat() {
+      const id_contratToDelete = contratItem.value.id_contrat;
 
-      await serviceStore.deleteService(id_serviceToDelete);
+      await contratStore.deleteContrat(id_contratToDelete);
 
       handleDeleteModal.value = false;
-      await serviceStore.listAllService();
+      await contratStore.listAllContrat();
     }
 
     onMounted(() => {
-      serviceStore.listAllService();
+      contratStore.listAllContrat();
     });
 
     return {
       filter: ref(""),
       columns,
       date: ref("2023/11/01"),
-      services,
-      addService,
+      contrats,
       handleDeleteModal,
       handleDeleteClick,
-      confirmDeleteService,
+      confirmDeleteContrat,
       handleInfoClick,
-      handleUpdateModal,
-      onModifService,
       onSubmit,
-      serviceItem,
-      familleList,
-      fetchFamilleList,
+      contratItem,
+      addContrat,
+      clientsList,
+      fetchClientsList,
+      Intitulé,
+      description,
       model,
-      tva,
-      codecompt_service,
-      nom_service,
+      getEmptyContrat,
     };
   },
 };

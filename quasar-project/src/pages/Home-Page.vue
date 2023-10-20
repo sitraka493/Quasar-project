@@ -14,6 +14,7 @@
       @mouseleave="autoplay = true"
     >
       <q-carousel-slide :name="1" img-src="src/assets/Rhenus.jpg" />
+
       <q-carousel-slide :name="2" img-src="src/assets/Rhenusbat.jpg" />
       <q-carousel-slide
         :name="3"
@@ -21,17 +22,6 @@
       />
       <q-carousel-slide :name="4" img-src="src/assets/Managementsystem.webp" />
     </q-carousel>
-    <h2>Historique</h2>
-    <div>
-      <q-card-section>
-        <p>
-          Rhenus est un groupe allemand de services logistiques. Employant 37
-          500 salariés, Rhenus a un chiffre d'affaires de 7 milliards d'euros.
-          Fondée en 1912, l'entreprise est présente sur 970 sites tout autour de
-          la planète1. Rhenus fait partie du groupe.
-        </p>
-      </q-card-section>
-    </div>
   </div>
 </template>
 <script>
@@ -40,9 +30,21 @@ import { ref } from "vue";
 export default {
   setup() {
     return {
-      slide: ref(4),
+      slide: ref(1),
       autoplay: ref(true),
     };
   },
 };
 </script>
+<style>
+.full-screen-image {
+  width: 100vw; /* 100% de la largeur de la vue (viewport width) */
+  height: 100vh; /* 100% de la hauteur de la vue (viewport height) */
+  overflow: hidden; /* Cachez tout ce qui dépasse de la fenêtre */
+}
+.full-screen-image img {
+  width: 100%; /* 100% de la largeur du parent (.full-screen-image) */
+  height: 100%; /* 100% de la hauteur du parent (.full-screen-image) */
+  object-fit: cover; /* L'image remplira la zone sans déformer sa forme */
+}
+</style>
