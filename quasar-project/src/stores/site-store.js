@@ -38,8 +38,9 @@ export const useSiteStore = defineStore("site", {
     },
     async updateSite(id, site) {
       await apiSite.put("sites/" + id, site).then((res) => {
-        this.sites = res.data;
-        console.log(this.sites);
+        //this.sites = res.data;
+
+        console.log("Debug**", res);
       });
     },
     async deleteSite(id) {

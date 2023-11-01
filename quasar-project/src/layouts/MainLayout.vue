@@ -78,6 +78,13 @@ const linksList = [
     icon: "assignment",
     link: "#/FamilleServices",
   },
+
+  {
+    title: "Statistiques",
+
+    icon: "analytics",
+    link: "#/Stats",
+  },
 ];
 
 export default defineComponent({

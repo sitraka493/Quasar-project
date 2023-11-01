@@ -217,6 +217,7 @@
                 </q-form>
               </q-card>
             </q-dialog>
+
             <q-dialog
               v-model="handleUpdateModal"
               @show="fetchFamilleList"
@@ -293,6 +294,20 @@
           </template>
         </q-table>
       </div>
+      <div class="button-container">
+        <q-btn
+          class="q-mt-md custom-btn-style2"
+          color="green"
+          label="Exporter en Excel"
+          @click="exportToExcel"
+        />
+        <q-btn
+          class="q-mt-md custom-btn-style"
+          color="warning"
+          label="Exporter en PDF"
+          @click="exportToPDF"
+        />
+      </div>
     </q-page>
   </div>
 </template>
@@ -302,6 +317,10 @@ import { computed, onMounted, ref } from "vue";
 import { useServiceStore } from "src/stores/service-store.js";
 import { getEmptyService } from "src/utils/getEmptyService.js";
 import { useRouter } from "vue-router";
+import { useQuasar } from "quasar";
+import * as XLSX from "xlsx";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 export default {
   props: {
     service: {
@@ -311,6 +330,9 @@ export default {
   },
 
   setup() {
+    const router = useRouter();
+    const $q = useQuasar();
+
     const serviceStore = useServiceStore();
     const computedRows = ref([]);
     const handleDeleteModal = ref(false);
@@ -363,7 +385,7 @@ export default {
         field: "tva",
       },
     ];
-    const router = useRouter();
+
     const services = computed(() => {
       return serviceStore.services;
     });
@@ -382,10 +404,17 @@ export default {
         console.log("avant submit", serviceData);
         await serviceStore.addService(serviceData);
         addService.value = false;
-        await serviceStore.listAllService(); // Fermez le modal après ajout
+        await serviceStore.listAllService();
+        $q.notify({
+          message: "Service ajouté avec succès",
+          color: "positive",
+          position: "top",
+          timeout: 3000,
+        });
+        // Fermez le modal après ajout
       } catch (error) {
         // Gérer l'erreur (par exemple, afficher un message à l'utilisateur)
-        console.error(error);
+        console.error("erreur de la navigation:", error);
       }
     }
     const familleList = ref([]);
@@ -448,6 +477,13 @@ export default {
         await serviceStore.updateService(serviceId, updatedServiceData);
         handleUpdateModal.value = false; // Fermez le modal après la mise à jour
         await serviceStore.listAllService();
+        $q.notify({
+          message: "Service modifié avec succès",
+          color: "positive",
+          position: "top",
+          timeout: 3000,
+        });
+        await router.push({ name: "Services" });
       } catch (error) {
         console.error("Erreur lors de la mise à jour du service :", error);
       }
@@ -465,10 +501,136 @@ export default {
 
       handleDeleteModal.value = false;
       await serviceStore.listAllService();
+      $q.notify({
+        message: "Service supprimé avec succès",
+        color: "positive",
+        position: "top",
+        timeout: 3000,
+      });
     }
 
-    onMounted(() => {
-      serviceStore.listAllService();
+    function getAllDataFromDataTable() {
+      return services.value;
+    }
+    function exportToExcel() {
+      const allData = getAllDataFromDataTable();
+      const worksheet = XLSX.utils.json_to_sheet(allData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Sites");
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+
+      const data = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(data);
+      const a = document.createElement("a");
+      document.body.appendChild(a);
+      a.href = url;
+      a.download = "Services.xlsx";
+      a.click();
+      document.body.removeChild(a);
+    }
+    function generateFullHTML(data) {
+      const table = document.createElement("table");
+      const thead = document.createElement("thead");
+      const tbody = document.createElement("tbody");
+
+      // Créer l'en-tête de tableau
+      const headerRow = document.createElement("tr");
+      for (const key in data[0]) {
+        const th = document.createElement("th");
+        th.textContent = key;
+        headerRow.appendChild(th);
+      }
+      thead.appendChild(headerRow);
+
+      // Remplir les lignes de tableau avec les données
+      data.forEach((item) => {
+        const tr = document.createElement("tr");
+        for (const key in item) {
+          const td = document.createElement("td");
+          td.textContent = item[key];
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      });
+
+      table.appendChild(thead);
+      table.appendChild(tbody);
+
+      const container = document.createElement("div");
+      container.appendChild(table);
+
+      return container;
+    }
+    function generateTableHTML(data) {
+      let html = "<table>";
+      // Générer les en-têtes
+      html += "<tr>";
+      for (const key in data[0]) {
+        html += `<th>${key}</th>`;
+      }
+      html += "</tr>";
+
+      // Générer les lignes de données
+      data.forEach((item) => {
+        html += "<tr>";
+        for (const key in item) {
+          html += `<td>${item[key]}</td>`;
+        }
+        html += "</tr>";
+      });
+
+      html += "</table>";
+      return html;
+    }
+    async function exportToPDF() {
+      const allData = getAllDataFromDataTable();
+      const pdfWidth = 612;
+      const pdfHeight = 792;
+
+      const pdf = new jsPDF({
+        unit: "mm",
+        format: [pdfWidth, pdfHeight], // Définir la taille de la page
+      });
+      pdf.text("Liste des services", 10, 10);
+
+      // Position de départ pour les données du tableau
+      let y = 20;
+
+      // Ajouter les en-têtes
+      const headers = Object.keys(allData[0]);
+      pdf.setFontSize(14);
+      headers.forEach((header, index) => {
+        pdf.text(header, 10 + index * 40, y);
+      });
+
+      y += 10;
+      const incrementY = 7;
+      // Ajouter les données
+      pdf.setFontSize(10);
+      allData.forEach((row, rowIndex) => {
+        y += incrementY;
+        Object.values(row).forEach((value, colIndex) => {
+          const textValue =
+            value !== null && value !== undefined ? value.toString() : "";
+          pdf.text(textValue, 10 + colIndex * 40, y + rowIndex * 10);
+        });
+      });
+
+      pdf.save("listeSites.pdf");
+    }
+
+    onMounted(async () => {
+      try {
+        serviceStore.listAllService();
+      } catch (error) {
+        console.error("Erreur lors de l'appel à listAllService :", error);
+      }
     });
 
     return {
@@ -491,6 +653,8 @@ export default {
       tva,
       codecompt_service,
       nom_service,
+      exportToExcel,
+      exportToPDF,
     };
   },
 };
@@ -500,13 +664,20 @@ export default {
 .text-center {
   text-align: center;
 }
-.custom-btn-style {
-  margin-bottom: 400px;
-  margin-right: 750px;
-}
+
 #pdf-content {
   font-family: "Arial", sans-serif;
   color: #000; /* Couleur du texte */
   /* Ajoutez d'autres styles au besoin */
+}
+.custom-btn-style2 {
+  margin-right: 10px;
+}
+.button-container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  margin-bottom: 300px;
+  margin-right: 600px;
 }
 </style>

@@ -24,6 +24,7 @@ const routes = [
         component: () => import("pages/UpdateClientPage.vue"),
       },
       { path: "/SitePage", component: () => import("pages/SitePage.vue") },
+
       { path: "/Contrat", component: () => import("pages/ContratPage.vue") },
       {
         path: "/ContratClient/:id",
@@ -41,11 +42,17 @@ const routes = [
       },
       {
         path: "/Services",
+        name: "Services",
         component: () => import("pages/ServicesPage.vue"),
       },
       {
         path: "/Tarifications",
         component: () => import("pages/TarificationPage.vue"),
+      },
+
+      {
+        path: "/Stats",
+        component: () => import("pages/Stats-Page.vue"),
       },
     ],
   },

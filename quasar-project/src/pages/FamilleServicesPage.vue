@@ -157,7 +157,7 @@
                     <div class="q-mb-md">
                       <q-input
                         filled
-                        label="Nom du site"
+                        label="Nom de la famille service"
                         v-model="familleItem.libelle_famille"
                         autofocus
                         @keyup.enter="prompt = false"
@@ -212,7 +212,7 @@ import { computed, onMounted, ref } from "vue";
 import { useFamilleStore } from "src/stores/famille-store.js";
 import { useRouter } from "vue-router";
 import { getEmptyFamille } from "src/utils/getEmptyFamille.js";
-
+import { useQuasar } from "quasar";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 export default {
@@ -225,6 +225,7 @@ export default {
 
   setup() {
     const familleStore = useFamilleStore();
+    const $q = useQuasar();
     const columns = [
       {
         name: "Numéro",
@@ -251,7 +252,13 @@ export default {
       console.log("essai", familleItem.value);
       await familleStore.addFamille(familleItem.value);
       await familleStore.listAllFamille();
-      router.push("/Services");
+      $q.notify({
+        message: "Famille service ajoutée avec succès",
+        color: "positive",
+        position: "top",
+        timeout: 3000,
+      });
+      router.push("/FamilleServices");
     }
     const openUpdateModal = ref(false);
     async function handleUpdateClick(Id) {
@@ -273,6 +280,12 @@ export default {
         await familleStore.updateFamille(Id, familleItem.value);
         openUpdateModal.value = false; // Fermez le modal après la mise à jour
         await familleStore.listAllFamille();
+        $q.notify({
+          message: "Famille service modifiée avec succès",
+          color: "positive",
+          position: "top",
+          timeout: 3000,
+        });
       } catch (error) {
         console.error("Erreur lors de la mise à jour du site :", error);
       }

@@ -106,6 +106,7 @@ import { computed, onMounted, ref } from "vue";
 import { useArchiveStore } from "src/stores/archive-store.js";
 import jsPDF from "jspdf";
 import { useRouter } from "vue-router";
+import * as XLSX from "xlsx";
 import html2canvas from "html2canvas";
 const archiveStore = useArchiveStore();
 const router = useRouter();
@@ -157,7 +158,7 @@ export default {
       {
         name: "nombre de boîte",
         align: "center",
-        label: "Nombre de boite",
+        label: "Nombre de boite(s)",
         field: "fin_boite",
       },
       {
@@ -188,6 +189,29 @@ export default {
     }
     function getAllDataFromDataTable() {
       return archives.value;
+    }
+
+    function exportToExcel() {
+      const allData = getAllDataFromDataTable();
+      const worksheet = XLSX.utils.json_to_sheet(allData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Sites");
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+
+      const data = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(data);
+      const a = document.createElement("a");
+      document.body.appendChild(a);
+      a.href = url;
+      a.download = "archives.xlsx";
+      a.click();
+      document.body.removeChild(a);
     }
     function generateFullHTML(data) {
       const table = document.createElement("table");
@@ -287,6 +311,7 @@ export default {
       handleInfoClick,
       archives,
       exportToPDF,
+      exportToExcel,
     };
   },
 };

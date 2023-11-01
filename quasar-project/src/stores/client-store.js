@@ -32,8 +32,8 @@ export const useClientStore = defineStore("client", {
     },
     async updateClient(id, client) {
       await api.put("clients/" + id, client).then((res) => {
-        this.clients = res.data;
-        console.log(this.clients);
+        //this.clients = res.data;
+        console.log("client modfié:", res);
       });
     },
     deleteClient(id) {

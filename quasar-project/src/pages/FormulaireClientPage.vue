@@ -5,7 +5,7 @@
     </div>
     <q-card>
       <div class="q-pa-md">
-        <q-form @submit.stop="onSubmit" @reset="onReset" class="q-pa-md">
+        <q-form @submit.stop="onSubmit" class="q-pa-md">
           <div class="q-gutter-md">
             <div class="row">
               <div class="col">
@@ -14,6 +14,7 @@
                   v-model="clientItem.nomClient"
                   label="Nom du client"
                   margin-left="200px"
+                  :rules="[(val) => !!val || 'Ce champ est obligatoire']"
                 />
               </div>
 
@@ -22,6 +23,12 @@
                   filled
                   v-model="clientItem.tel_client"
                   label="Numéro de Téléphone"
+                  :rules="[
+                    (val) => !!val || 'Ce champ est obligatoire',
+                    (val) =>
+                      /^\d+$/.test(val) ||
+                      'Veuillez entrer uniquement des chiffres',
+                  ]"
                 />
               </div>
             </div>
@@ -31,6 +38,7 @@
                   filled
                   v-model="clientItem.adresse_client"
                   label="Adresse du client"
+                  :rules="[(val) => !!val || 'Ce champ est obligatoire']"
                 />
               </div>
 
@@ -39,6 +47,7 @@
                   filled
                   v-model="clientItem.date_contrat"
                   label="Selectionnez une date"
+                  :rules="[(val) => !!val || 'Ce champ est obligatoire']"
                 >
                   <template v-slot:prepend>
                     <q-icon name="event" class="cursor-pointer">
@@ -75,6 +84,9 @@
                   filled
                   v-model="clientItem.email_client"
                   label="Email"
+                  :rules="[(val) => !!val || 'Ce champ est obligatoire']"
+                  @input="validateEmail"
+                  :error="!emailIsValid"
                 />
               </div>
               <div class="col">
@@ -89,6 +101,7 @@
                   v-model="clientItem.etat_client"
                   :options="options2"
                   label="Situation"
+                  :rules="[(val) => !!val || 'Ce champ est obligatoire']"
                 />
               </div>
 
@@ -98,6 +111,7 @@
                   v-model="clientItem.règlement"
                   :options="options"
                   label="Règlement par"
+                  :rules="[(val) => !!val || 'Ce champ est obligatoire']"
                 />
               </div>
             </div>
@@ -107,6 +121,7 @@
                 filled
                 v-model="clientItem.codecompt_client"
                 label="Code comptable"
+                :rules="[(val) => !!val || 'Ce champ est obligatoire']"
               />
             </div>
 
@@ -177,12 +192,28 @@ export default {
       }
       return false; // Return false if all fields are non-empty
     });*/
+    const emailIsValid = ref(true);
+    function validateEmail() {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const isValidEmail = emailRegex.test(clientItem.value.email_client);
+
+      if (!isValidEmail) {
+        $q.notify({
+          message: "Adresse e-mail invalide",
+          color: "negative",
+          position: "bottom",
+          timeout: 3000,
+        });
+      }
+    }
     return {
       filter: ref(""),
       clientItem,
+      emailIsValid,
       onSubmit,
       date: ref("2023/11/01"),
       model: ref(null),
+      validateEmail,
       options: [
         "Virement",
         "Chèque",

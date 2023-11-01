@@ -37,9 +37,10 @@ export const useContratStore = defineStore("contrat", {
     },
     async addContrat(contrat) {
       try {
-        const res = await api.post("contrats", contrat);
-        this.contrats = res.data;
-        console.log("nouveau contrat:", this.contrats);
+        await api.post("contrats", contrat).then((res) => {
+          //this.contrats = res.data;
+          console.log("nouveau contrat:", res);
+        });
       } catch (error) {
         console.error("Erreur lors de l'ajout du contrat:", error);
       }

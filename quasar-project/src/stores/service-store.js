@@ -41,16 +41,16 @@ export const useServiceStore = defineStore("service", {
 
     async updateService(id, service) {
       await apiTarif.put("services/" + id, service).then((res) => {
-        this.services = res.data;
-        console.log(this.services);
+        //this.services = res.data;
+        console.log("service modifié:", res);
       });
     },
 
     async addService(service) {
       try {
         const res = await apiTarif.post("services", service);
-        this.services = res.data;
-        console.log("nouveau service:", this.services);
+        //this.services = res.data;
+        console.log("nouveau service:", res);
       } catch (error) {
         console.error("Erreur lors de l'ajout du service:", error);
       }
@@ -58,8 +58,8 @@ export const useServiceStore = defineStore("service", {
 
     async deleteService(id) {
       await apiTarif.delete("services/" + id).then((res) => {
-        this.services = res.data;
-        console.log(this.services);
+        //this.services = res.data;
+        console.log(res);
       });
     },
   },

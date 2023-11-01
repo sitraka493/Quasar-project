@@ -147,9 +147,9 @@ export default {
     const client = computed(() => {
       return clientStore.client;
     });
-    function onModif() {
+    async function onModif() {
       console.log("essai2", client.value);
-      clientStore.updateClient(clientId, client.value);
+      await clientStore.updateClient(clientId, client.value);
       $q.notify({
         message: "Client modifié succès",
         color: "positive",

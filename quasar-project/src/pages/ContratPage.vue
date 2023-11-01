@@ -234,6 +234,7 @@ import { computed, onMounted, ref } from "vue";
 import { useContratStore } from "src/stores/contrat-store.js";
 import { getEmptyContrat } from "src/utils/getEmptyContrat.js";
 import { useRouter } from "vue-router";
+import { useQuasar } from "quasar";
 export default {
   props: {
     contrat: {
@@ -252,6 +253,7 @@ export default {
     const contratItem = ref({ id_contrat: null });
     const addContrat = ref(false);
     const contratData = ref(getEmptyContrat());
+    const $q = useQuasar();
 
     const columns = [
       {
@@ -307,7 +309,13 @@ export default {
         console.log("avant submit", contratData);
         await contratStore.addContrat(contratData);
         addContrat.value = false;
-        await contratStore.listAllContrat(); // Fermez le modal après ajout
+        await contratStore.listAllContrat();
+        $q.notify({
+          message: "Contrat ajouté avec succès",
+          color: "positive",
+          position: "top",
+          timeout: 3000,
+        });
       } catch (error) {
         // Gérer l'erreur (par exemple, afficher un message à l'utilisateur)
         console.error(error);
@@ -346,6 +354,12 @@ export default {
 
       handleDeleteModal.value = false;
       await contratStore.listAllContrat();
+      $q.notify({
+        message: "Contrat supprimé avec succès",
+        color: "positive",
+        position: "top",
+        timeout: 3000,
+      });
     }
 
     onMounted(() => {

@@ -107,6 +107,7 @@ export default {
             color: "green-4",
             textColor: "white",
             icon: "cloud_done",
+            position: "bottom",
             message: "Connexion réussie",
           });
           router.push("/home-page");

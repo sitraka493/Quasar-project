@@ -139,6 +139,7 @@
                       filled
                       label="Nom du site"
                       v-model="siteItem.site"
+                      :rules="[(val) => !!val || 'Ce champ est obligatoire']"
                       autofocus
                       @keyup.enter="prompt = false"
                     />
@@ -157,6 +158,7 @@
                       filled
                       v-model="siteItem.ipImpression"
                       label="Ip Impression"
+                      :rules="[(val) => !!val || 'Ce champ est obligatoire']"
                       autofocus
                       @keyup.enter="prompt = false"
                     />
@@ -167,6 +169,12 @@
                       filled
                       v-model="siteItem.port"
                       label="Port"
+                      :rules="[
+                        (val) => !!val || 'Ce champ est obligatoire',
+                        (val) =>
+                          /^\d+$/.test(val) ||
+                          'Veuillez entrer uniquement des chiffres',
+                      ]"
                       autofocus
                       @keyup.enter="prompt = false"
                     />
@@ -266,7 +274,7 @@ import { useRouter } from "vue-router";
 import { useSiteStore } from "src/stores/site-store";
 import { getEmptySite } from "src/utils/getEmptySite";
 import * as XLSX from "xlsx";
-
+import { useQuasar } from "quasar";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
@@ -283,12 +291,19 @@ export default {
     const siteItem = ref(getEmptySite());
     const handleDelete = ref(false);
     const router = useRouter();
+    const $q = useQuasar();
 
     async function onSubmit() {
       console.log("essai", siteItem.value);
       await siteStore.addSite(siteItem.value);
       await siteStore.listAllSite();
-      router.push("/SitePage");
+      $q.notify({
+        message: "Site ajouté avec succès",
+        color: "positive",
+        position: "top",
+        timeout: 3000,
+      });
+      await router.push("/SitePage");
     }
     function handleDeleteClick(id_site) {
       console.log(" id_site:", id_site);
@@ -302,6 +317,13 @@ export default {
 
       handleDelete.value = false;
       await siteStore.listAllSite();
+      $q.notify({
+        message: " Suppression effectuée avec succès",
+        color: "positive",
+        position: "top",
+        timeout: 3000,
+      });
+      await router.push("/SitePage");
     }
 
     const columns = [
@@ -367,11 +389,134 @@ export default {
       try {
         const siteId = siteItem.value.id_site; // avoir l'ID du site
         await siteStore.updateSite(siteId, siteItem.value);
+
         handleUpdateModal.value = false; // Fermez le modal après la mise à jour
+
         await siteStore.listAllSite();
+        $q.notify({
+          message: "Site Modifié avec succès",
+          color: "positive",
+          position: "top",
+          timeout: 3000,
+        });
       } catch (error) {
         console.error("Erreur lors de la mise à jour du site :", error);
       }
+    }
+    function getAllDataFromDataTable() {
+      return sites.value;
+    }
+    function exportToExcel() {
+      const allData = getAllDataFromDataTable();
+      const worksheet = XLSX.utils.json_to_sheet(allData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Sites");
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+
+      const data = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(data);
+      const a = document.createElement("a");
+      document.body.appendChild(a);
+      a.href = url;
+      a.download = "sites.xlsx";
+      a.click();
+      document.body.removeChild(a);
+    }
+    function generateFullHTML(data) {
+      const table = document.createElement("table");
+      const thead = document.createElement("thead");
+      const tbody = document.createElement("tbody");
+
+      // Créer l'en-tête de tableau
+      const headerRow = document.createElement("tr");
+      for (const key in data[0]) {
+        const th = document.createElement("th");
+        th.textContent = key;
+        headerRow.appendChild(th);
+      }
+      thead.appendChild(headerRow);
+
+      // Remplir les lignes de tableau avec les données
+      data.forEach((item) => {
+        const tr = document.createElement("tr");
+        for (const key in item) {
+          const td = document.createElement("td");
+          td.textContent = item[key];
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      });
+
+      table.appendChild(thead);
+      table.appendChild(tbody);
+
+      const container = document.createElement("div");
+      container.appendChild(table);
+
+      return container;
+    }
+    function generateTableHTML(data) {
+      let html = "<table>";
+      // Générer les en-têtes
+      html += "<tr>";
+      for (const key in data[0]) {
+        html += `<th>${key}</th>`;
+      }
+      html += "</tr>";
+
+      // Générer les lignes de données
+      data.forEach((item) => {
+        html += "<tr>";
+        for (const key in item) {
+          html += `<td>${item[key]}</td>`;
+        }
+        html += "</tr>";
+      });
+
+      html += "</table>";
+      return html;
+    }
+    async function exportToPDF() {
+      const allData = getAllDataFromDataTable();
+      const pdfWidth = 612;
+      const pdfHeight = 792;
+
+      const pdf = new jsPDF({
+        unit: "mm",
+        format: [pdfWidth, pdfHeight], // Définir la taille de la page
+      });
+      pdf.text("Liste des clients", 10, 10);
+
+      // Position de départ pour les données du tableau
+      let y = 20;
+
+      // Ajouter les en-têtes
+      const headers = Object.keys(allData[0]);
+      pdf.setFontSize(14);
+      headers.forEach((header, index) => {
+        pdf.text(header, 10 + index * 40, y);
+      });
+
+      y += 10;
+      const incrementY = 7;
+      // Ajouter les données
+      pdf.setFontSize(10);
+      allData.forEach((row, rowIndex) => {
+        y += incrementY;
+        Object.values(row).forEach((value, colIndex) => {
+          const textValue =
+            value !== null && value !== undefined ? value.toString() : "";
+          pdf.text(textValue, 10 + colIndex * 40, y + rowIndex * 10);
+        });
+      });
+
+      pdf.save("listeSites.pdf");
     }
 
     onMounted(() => {
@@ -381,8 +526,6 @@ export default {
     return {
       filter: ref(""),
       prompt: ref(false),
-      address: ref(""),
-      notation: ref(""),
       siteItem,
       onSubmit,
       columns,
@@ -393,6 +536,8 @@ export default {
       openUpdateModal,
       handleUpdateModal,
       onModifSite,
+      exportToExcel,
+      exportToPDF,
     };
   },
 };

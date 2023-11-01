@@ -35,9 +35,9 @@ export const useUserStore = defineStore("user", {
     async updateUser(id, user) {
       console.log("updating...", id, user);
       await api.put("client_utilisateurs/" + id, user).then((res) => {
-        this.users = res.data;
+        // this.users = res.data;
 
-        console.log(this.users);
+        console.log("Modification", res);
       });
     },
   },

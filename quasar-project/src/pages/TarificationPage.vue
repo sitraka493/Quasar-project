@@ -200,13 +200,15 @@
                         map-options
                       />
                     </div>
+
                     <div class="q-mb-md">
-                      <q-input
+                      <q-select
                         filled
                         v-model="id_client"
-                        label="Id Client"
-                        autofocus
-                        @keyup.enter="prompt = false"
+                        :options="clientList"
+                        label="Veuillez choisir le client"
+                        emit-value
+                        map-options
                       />
                     </div>
 
@@ -278,23 +280,6 @@
                   </q-card-section>
 
                   <q-card-section class="q-pt-none">
-                    <q-input filled label="Id Client" v-model="id_client" />
-                  </q-card-section>
-
-                  <q-card-section class="q-pt-none">
-                    <q-input filled label="prix" v-model="prix" />
-                  </q-card-section>
-                  <q-card-section class="q-pt-none">
-                    <q-input filled label="Quantité2" v-model="getQuantité2" />
-                  </q-card-section>
-
-                  <q-card-section class="q-pt-none">
-                    <q-input filled label="Quantité1" v-model="quantité1" />
-                  </q-card-section>
-                  <q-card-section class="q-pt-none">
-                    <q-input filled label="libelle" v-model="libelle" />
-                  </q-card-section>
-                  <q-card-section class="q-pt-none">
                     <div class="q-mb-md">
                       <q-select
                         filled
@@ -330,6 +315,36 @@
                         map-options
                       />
                     </div>
+                  </q-card-section>
+
+                  <q-card-section class="q-pt-none">
+                    <div class="q-mb-md">
+                      <q-select
+                        filled
+                        v-model="id_client"
+                        :options="clientList"
+                        label="Veuillez choisir le client"
+                        emit-value
+                        map-options
+                      />
+                    </div>
+                  </q-card-section>
+                  <q-card-section class="q-pt-none">
+                    <q-input filled label="prix" v-model="prix" />
+                  </q-card-section>
+
+                  <q-card-section class="q-pt-none">
+                    <q-input filled label="Coefficient" v-model="coefficient" />
+                  </q-card-section>
+
+                  <q-card-section class="q-pt-none">
+                    <q-input filled label="libelle" v-model="libelle" />
+                  </q-card-section>
+                  <q-card-section class="q-pt-none">
+                    <q-input filled label="Quantité1" v-model="quantité1" />
+                  </q-card-section>
+                  <q-card-section class="q-pt-none">
+                    <q-input filled label="Quantité2" v-model="getQuantité2" />
                   </q-card-section>
 
                   <q-card-actions align="right" class="text-primary">
@@ -388,7 +403,13 @@
 <script>
 import { computed, onMounted, ref } from "vue";
 import { useTarifStore } from "src/stores/tarif-store.js";
+import { useClientStore } from "src/stores/client-store";
 import { getEmptyTarif } from "src/utils/getEmptyTarif.js";
+import * as XLSX from "xlsx";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import { useQuasar } from "quasar";
+
 import { useRouter } from "vue-router";
 export default {
   props: {
@@ -399,6 +420,8 @@ export default {
   },
 
   setup() {
+    const $q = useQuasar();
+    const clientStore = useClientStore();
     const tarifStore = useTarifStore();
     const computedRows = ref([]);
     const handleDeleteModal = ref(false);
@@ -406,6 +429,7 @@ export default {
     const periode = ref(null);
     const unite = ref(null);
     const nom_service = ref("");
+    const nomClient = ref("");
     const tarifItem = ref({});
     const addTarif = ref(false);
     const tarifData = ref(getEmptyTarif());
@@ -415,7 +439,14 @@ export default {
     const libelle = ref("");
     const quantité1 = ref("");
     const getQuantité2 = ref("");
+    const clients = ref([]);
 
+    function AddTarifDialog() {
+      fetchServiceList();
+      fetchPeriodeList();
+      fetchUniteList();
+      fetchClientsList();
+    }
     async function onSubmit() {
       console.log("données:", model.value);
       const tarifData = {
@@ -428,6 +459,7 @@ export default {
         unite: {
           id_unite: unite.value,
         },
+
         id_client: id_client.value,
         prix: prix.value, //le nom de la propriété en fonction de votre API
         coefficient: coefficient.value,
@@ -436,20 +468,16 @@ export default {
         getQuantité2: getQuantité2.value,
       };
 
-      try {
-        console.log("avant submit", tarifData);
-        await tarifStore.addTarif(tarifData);
-        addTarif.value = false;
-        await tarifStore.listAllTarif(); // Fermez le modal après ajout
-      } catch (error) {
-        // Gérer l'erreur (par exemple, afficher un message à l'utilisateur)
-        console.error(error);
-      }
-    }
-    function AddTarifDialog() {
-      fetchServiceList();
-      fetchPeriodeList();
-      fetchUniteList();
+      console.log("avant submit", tarifData);
+      await tarifStore.addTarif(tarifData);
+      addTarif.value = false;
+      await tarifStore.listAllTarif();
+      $q.notify({
+        message: "Tarif ajouté avec succès",
+        color: "positive",
+        position: "top",
+        timeout: 3000,
+      });
     }
 
     const serviceList = ref([]);
@@ -494,6 +522,20 @@ export default {
         console.error(error);
       }
     }
+    const clientList = ref([]);
+    async function fetchClientsList() {
+      try {
+        const clientsFromAPI = await tarifStore.listAllClient();
+        console.log("Clients ", clientsFromAPI);
+        clientList.value = clientsFromAPI;
+        clientList.value = clientsFromAPI.map((client) => ({
+          label: client.nomClient,
+          value: client.id_client,
+        }));
+      } catch (error) {
+        console.error(error);
+      }
+    }
 
     const handleUpdateModal = ref(false);
     async function handleInfoClick(Id) {
@@ -503,8 +545,9 @@ export default {
         if (tarifData) {
           id_client.value = tarifData.id_client;
           prix.value = tarifData.prix;
+          coefficient.value = tarifData.coefficient;
           quantité1.value = tarifData.quantité1;
-          getQuantité2.value = tarifData.quantité2;
+          getQuantité2.value = tarifData.getQuantité2;
           libelle.value = tarifData.libelle;
           model.value = tarifData.service.id_service; // Mettez à jour model avec l'ID de la famille
           periode.value = tarifData.periode.id_periode;
@@ -561,12 +604,26 @@ export default {
         await tarifStore.updateTarif(tarifId, updatedTarifData);
         handleUpdateModal.value = false; // Fermez le modal après la mise à jour
         await tarifStore.listAllTarif();
+        $q.notify({
+          message: "Tarif modifié avec succès",
+          color: "positive",
+          position: "top",
+          timeout: 3000,
+        });
       } catch (error) {
         console.error("Erreur lors de la mise à jour du service :", error);
       }
     }
 
     const columns = [
+      {
+        name: "id_tarif",
+        required: true,
+        label: "Id Tarif",
+        align: "center",
+        field: "id_tarification",
+        sortable: true,
+      },
       {
         name: "id_client",
         required: true,
@@ -608,7 +665,7 @@ export default {
       {
         name: "Prix",
         required: true,
-        label: "Prix",
+        label: "Prix(€)",
         align: "center",
         field: "prix",
         sortable: true,
@@ -666,6 +723,128 @@ export default {
 
       handleDeleteModal.value = false;
       await tarifStore.listAllTarif();
+      $q.notify({
+        message: "Suppression réussie",
+        color: "positive",
+        position: "top",
+        timeout: 3000,
+      });
+    }
+
+    function getAllDataFromDataTable() {
+      return tarifs.value;
+    }
+    function exportToExcel() {
+      const allData = getAllDataFromDataTable();
+      const worksheet = XLSX.utils.json_to_sheet(allData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Sites");
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+
+      const data = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(data);
+      const a = document.createElement("a");
+      document.body.appendChild(a);
+      a.href = url;
+      a.download = "Tarifications.xlsx";
+      a.click();
+      document.body.removeChild(a);
+    }
+    function generateFullHTML(data) {
+      const table = document.createElement("table");
+      const thead = document.createElement("thead");
+      const tbody = document.createElement("tbody");
+
+      // Créer l'en-tête de tableau
+      const headerRow = document.createElement("tr");
+      for (const key in data[0]) {
+        const th = document.createElement("th");
+        th.textContent = key;
+        headerRow.appendChild(th);
+      }
+      thead.appendChild(headerRow);
+
+      // Remplir les lignes de tableau avec les données
+      data.forEach((item) => {
+        const tr = document.createElement("tr");
+        for (const key in item) {
+          const td = document.createElement("td");
+          td.textContent = item[key];
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      });
+
+      table.appendChild(thead);
+      table.appendChild(tbody);
+
+      const container = document.createElement("div");
+      container.appendChild(table);
+
+      return container;
+    }
+    function generateTableHTML(data) {
+      let html = "<table>";
+      // Générer les en-têtes
+      html += "<tr>";
+      for (const key in data[0]) {
+        html += `<th>${key}</th>`;
+      }
+      html += "</tr>";
+
+      // Générer les lignes de données
+      data.forEach((item) => {
+        html += "<tr>";
+        for (const key in item) {
+          html += `<td>${item[key]}</td>`;
+        }
+        html += "</tr>";
+      });
+
+      html += "</table>";
+      return html;
+    }
+    async function exportToPDF() {
+      const allData = getAllDataFromDataTable();
+      const pdfWidth = 612;
+      const pdfHeight = 792;
+
+      const pdf = new jsPDF({
+        unit: "mm",
+        format: [pdfWidth, pdfHeight], // Définir la taille de la page
+      });
+      pdf.text("Liste des services", 10, 10);
+
+      // Position de départ pour les données du tableau
+      let y = 20;
+
+      // Ajouter les en-têtes
+      const headers = Object.keys(allData[0]);
+      pdf.setFontSize(14);
+      headers.forEach((header, index) => {
+        pdf.text(header, 10 + index * 40, y);
+      });
+
+      y += 10;
+      const incrementY = 7;
+      // Ajouter les données
+      pdf.setFontSize(10);
+      allData.forEach((row, rowIndex) => {
+        y += incrementY;
+        Object.values(row).forEach((value, colIndex) => {
+          const textValue =
+            value !== null && value !== undefined ? value.toString() : "";
+          pdf.text(textValue, 10 + colIndex * 40, y + rowIndex * 10);
+        });
+      });
+
+      pdf.save("liste des tarifications.pdf");
     }
 
     onMounted(() => {
@@ -676,6 +855,7 @@ export default {
     return {
       filter: ref(""),
       columns,
+      clients,
       tarifItem,
       AddTarifDialog,
       handleInfoClick,
@@ -691,6 +871,8 @@ export default {
       serviceList,
       periodeList,
       fetchUniteList,
+      fetchClientsList,
+      clientList,
       fetchServiceList,
       fetchPeriodeList,
       handleDeleteClick,
@@ -703,6 +885,8 @@ export default {
       prix,
       libelle,
       id_client,
+      exportToExcel,
+      exportToPDF,
     };
   },
 };
