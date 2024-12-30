@@ -2,6 +2,20 @@
   <q-card style="margin-top: 100px color: ;"
     ><h3 class="text-center">Gestion des sites</h3></q-card
   >
+  <div class="q-pa-md q-gutter-y-md column items-start">
+    <q-btn-group push>
+      <q-btn
+        push
+        label="Gérer les sites"
+        icon="place"
+        to="/SitePage"
+        title="Manage Clients"
+      />
+
+      <q-btn push label="Gérer les les rayonnages" icon="map" to="RayonPage" />
+    </q-btn-group>
+  </div>
+
   <div>
     <q-page class="flex flex-center">
       <q-table
@@ -286,7 +300,7 @@ export default {
     },
   },
 
-  setup(props) {
+  setup() {
     const siteStore = useSiteStore();
     const siteItem = ref(getEmptySite());
     const handleDelete = ref(false);
@@ -294,16 +308,26 @@ export default {
     const $q = useQuasar();
 
     async function onSubmit() {
-      console.log("essai", siteItem.value);
-      await siteStore.addSite(siteItem.value);
-      await siteStore.listAllSite();
-      $q.notify({
-        message: "Site ajouté avec succès",
-        color: "positive",
-        position: "top",
-        timeout: 3000,
-      });
-      await router.push("/SitePage");
+      try {
+        console.log("essai", siteItem.value);
+        await siteStore.addSite(siteItem.value);
+        await siteStore.listAllSite();
+        $q.notify({
+          message: "Site ajouté avec succès",
+          color: "positive",
+          position: "top",
+          timeout: 3000,
+        });
+        await router.push("/SitePage");
+      } catch (error) {
+        console.error("Une erreur s'est produite :", error);
+        $q.notify({
+          message: "Ajout impossible",
+          color: "negative",
+          position: "bottom",
+          timeout: 3000,
+        });
+      }
     }
     function handleDeleteClick(id_site) {
       console.log(" id_site:", id_site);
@@ -316,6 +340,7 @@ export default {
       await siteStore.deleteSite(id_siteToDelete);
 
       handleDelete.value = false;
+
       await siteStore.listAllSite();
       $q.notify({
         message: " Suppression effectuée avec succès",

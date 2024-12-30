@@ -20,8 +20,8 @@ export const useFamilleStore = defineStore("famille", {
     },
     async addFamille(famille) {
       await apiTarif.post("familles", famille).then((res) => {
-        this.familles = res.data;
-        console.log(res.data);
+        //this.familles = res.data;
+        console.log(res);
       });
     },
     async getOneFamille(id) {

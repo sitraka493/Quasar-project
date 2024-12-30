@@ -391,13 +391,14 @@ export default {
 .text-center {
   text-align: center;
 }
-.custom-btn-style2 {
-  margin-right: 10px;
-}
+
 #pdf-content {
   font-family: "Arial", sans-serif;
   color: #000; /* Couleur du texte */
   /* Ajoutez d'autres styles au besoin */
+}
+.custom-btn-style2 {
+  margin-right: 10px;
 }
 .button-container {
   display: flex;

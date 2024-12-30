@@ -24,5 +24,9 @@ export const useArchiveStore = defineStore("archive", {
         console.log(this.archive);
       });
     },
+    async deleteArchive(id) {
+      await apiArch.delete("archives/" + id);
+      console.log(this.archives);
+    },
   },
 });

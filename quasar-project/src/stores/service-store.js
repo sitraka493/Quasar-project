@@ -47,13 +47,9 @@ export const useServiceStore = defineStore("service", {
     },
 
     async addService(service) {
-      try {
-        const res = await apiTarif.post("services", service);
-        //this.services = res.data;
-        console.log("nouveau service:", res);
-      } catch (error) {
-        console.error("Erreur lors de l'ajout du service:", error);
-      }
+      const res = await apiTarif.post("services", service);
+      //this.services = res.data;
+      console.log("nouveau service:", res);
     },
 
     async deleteService(id) {

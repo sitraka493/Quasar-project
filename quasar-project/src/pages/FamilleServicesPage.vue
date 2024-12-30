@@ -161,6 +161,7 @@
                         v-model="familleItem.libelle_famille"
                         autofocus
                         @keyup.enter="prompt = false"
+                        :rules="[(val) => !!val || 'Ce champ est obligatoire']"
                       />
                     </div>
 
@@ -249,16 +250,25 @@ export default {
     });
     const familleItem = ref(getEmptyFamille());
     async function onSubmit() {
-      console.log("essai", familleItem.value);
-      await familleStore.addFamille(familleItem.value);
-      await familleStore.listAllFamille();
-      $q.notify({
-        message: "Famille service ajoutée avec succès",
-        color: "positive",
-        position: "top",
-        timeout: 3000,
-      });
-      router.push("/FamilleServices");
+      try {
+        console.log("essai", familleItem.value);
+        await familleStore.addFamille(familleItem.value);
+        await familleStore.listAllFamille();
+        $q.notify({
+          message: "Famille service ajoutée avec succès",
+          color: "positive",
+          position: "top",
+          timeout: 3000,
+        });
+      } catch (error) {
+        console.error("Une erreur s'est produite :", error);
+        $q.notify({
+          message: "Cette famille de service existe déjà",
+          color: "negative",
+          position: "bottom",
+          timeout: 3000,
+        });
+      }
     }
     const openUpdateModal = ref(false);
     async function handleUpdateClick(Id) {
@@ -268,10 +278,13 @@ export default {
         openUpdateModal.value = true;
         console.log("familleData", familleData);
       } catch (error) {
-        console.error(
-          "Erreur lors de la récupération des données du site :",
-          error
-        );
+        console.error("Une erreur s'est produite :", error);
+        $q.notify({
+          message: "Modification impossible",
+          color: "negative",
+          position: "bottom",
+          timeout: 3000,
+        });
       }
     }
     async function onModifFamille() {

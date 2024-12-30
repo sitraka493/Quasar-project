@@ -236,5 +236,12 @@ canvas {
 #myPieChart {
   max-width: 800px !important;
   height: 400px !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  margin-bottom: 20px;
+  max-width: 800px;
+  margin: 0 auto;
 }
 </style>

@@ -172,16 +172,26 @@ export default {
     const $q = useQuasar();
 
     async function onSubmit() {
-      console.log("essai", clientItem.value);
-      await clientStore.addClient(clientItem.value);
-      await clientStore.listAllClient();
-      $q.notify({
-        message: "Client ajouté avec succès",
-        color: "positive",
-        position: "bottom",
-        timeout: 3000,
-      });
-      router.push("/Client");
+      try {
+        console.log("essai", clientItem.value);
+        await clientStore.addClient(clientItem.value);
+        await clientStore.listAllClient();
+        $q.notify({
+          message: "Client ajouté avec succès",
+          color: "positive",
+          position: "bottom",
+          timeout: 3000,
+        });
+        router.push("/Client");
+      } catch (error) {
+        console.error("Une erreur s'est produite :", error);
+        $q.notify({
+          message: "Une erreur s'est produite lors de l'ajout du client",
+          color: "negative",
+          position: "bottom",
+          timeout: 3000,
+        });
+      }
     }
 
     /*const isAnyFieldEmpty = computed(() => {

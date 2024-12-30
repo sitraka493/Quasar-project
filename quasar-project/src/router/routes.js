@@ -24,6 +24,7 @@ const routes = [
         component: () => import("pages/UpdateClientPage.vue"),
       },
       { path: "/SitePage", component: () => import("pages/SitePage.vue") },
+      { path: "/RayonPage", component: () => import("pages/RayonPage.vue") },
 
       { path: "/Contrat", component: () => import("pages/ContratPage.vue") },
       {
@@ -42,7 +43,6 @@ const routes = [
       },
       {
         path: "/Services",
-        name: "Services",
         component: () => import("pages/ServicesPage.vue"),
       },
       {

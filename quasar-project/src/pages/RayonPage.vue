@@ -1,34 +1,29 @@
 <template margin-left="20px">
   <q-card style="margin-top: 100px color: ;"
-    ><h3 class="text-center">Gestion des services</h3>
-  </q-card>
+    ><h3 class="text-center">Gestion des rayonnages</h3></q-card
+  >
   <div class="q-pa-md q-gutter-y-md column items-start">
     <q-btn-group push>
       <q-btn
         push
-        label="Gérer famille"
-        icon="group"
-        to="/FamilleServices"
-        title="Manage Family"
+        label="Gérer les sites"
+        icon="place"
+        to="/SitePage"
+        title="Manage Clients"
       />
 
-      <q-btn push label="Gérer Service" icon="assignment" to="Services" />
-      <q-btn
-        push
-        label="Gérer Tarifications"
-        icon="margin"
-        to="/Tarifications"
-      />
+      <q-btn push label="Gérer les les rayonnages" icon="map" to="RayonPage" />
     </q-btn-group>
   </div>
-  <div style="margin-bottom: 0px">
+
+  <div>
     <q-page class="flex flex-center">
       <div id="pdf">
         <q-table
           flat
           bordered
-          title="Liste des services"
-          :rows="services"
+          title="Liste des rayons"
+          :rows="rayons"
           :columns="columns"
           row-key="name"
           :filter="filter"
@@ -44,7 +39,7 @@
                   size="sm"
                   round
                   dense
-                  @click="handleInfoClick(props.row.id_service)"
+                  @click="handleInfoClick(props.row.id_rayonnage)"
                   icon="update"
                   text-color="primary"
                 />
@@ -55,7 +50,7 @@
                   size="sm"
                   round
                   dense
-                  @click="handleDeleteClick(props.row.id_service)"
+                  @click="handleDeleteClick(props.row.id_site)"
                   icon="delete"
                   text-color="primary"
                 />
@@ -96,14 +91,6 @@
               class="q-pa-xs col-xs-12 col-sm-6 col-md-4 col-lg-3 grid-style-transition"
               :style="props.selected ? 'transform: scale(0.95);' : ''"
             >
-              <q-td auto-width>
-                <q-toggle
-                  v-model="props.expand"
-                  checked-icon="add"
-                  unchecked-icon="remove"
-                  :label="`Index: ${props.row.index}`"
-                />
-              </q-td>
               <q-card
                 bordered
                 flat
@@ -141,14 +128,8 @@
               </q-card>
             </div>
           </template>
-
           <template v-slot:top>
-            <q-btn
-              color="primary"
-              icon="add"
-              label=""
-              @click="addService = true"
-            />
+            <q-btn color="primary" icon="add" @click="prompt = true" />
             <q-space />
             <q-input
               borderless
@@ -162,29 +143,30 @@
               </template>
             </q-input>
 
-            <q-dialog v-model="addService" @show="fetchFamilleList" persistent>
+            <q-dialog v-model="prompt" @show="fetchSiteList" persistent>
               <q-card style="min-width: 350px">
                 <q-form @submit="onSubmit">
                   <q-card-section>
-                    <div class="text-h6">Formulaire d'ajout d'un service</div>
+                    <div class="text-h6">Formulaire d'ajout</div>
                   </q-card-section>
-
                   <q-card-section class="q-pt-none">
                     <div class="q-mb-md">
                       <q-select
                         filled
-                        v-model="model"
-                        :options="familleList"
-                        label="Veuillez choisir la famille du service"
+                        v-model="site"
+                        :options="siteList"
+                        label="Veuillez choisir le site"
                         emit-value
                         map-options
                       />
                     </div>
+
                     <div class="q-mb-md">
                       <q-input
                         filled
-                        v-model="nom_service"
-                        label="service"
+                        label="Allée "
+                        v-model="allee"
+                        :rules="[(val) => !!val || 'Ce champ est obligatoire']"
                         autofocus
                         @keyup.enter="prompt = false"
                       />
@@ -192,8 +174,18 @@
                     <div class="q-mb-md">
                       <q-input
                         filled
-                        v-model="codecompt_service"
-                        label="code compte"
+                        v-model="colonne"
+                        label="Colonne"
+                        autofocus
+                        @keyup.enter="prompt = false"
+                      />
+                    </div>
+                    <div class="q-mb-md">
+                      <q-input
+                        filled
+                        v-model="niveau"
+                        label="Niveau"
+                        :rules="[(val) => !!val || 'Ce champ est obligatoire']"
                         autofocus
                         @keyup.enter="prompt = false"
                       />
@@ -202,11 +194,16 @@
                     <div class="q-mb-md">
                       <q-input
                         filled
-                        v-model="tva"
-                        label="TVA"
+                        v-model="position"
+                        label="Position"
+                        :rules="[
+                          (val) => !!val || 'Ce champ est obligatoire',
+                          (val) =>
+                            /^\d+$/.test(val) ||
+                            'Veuillez entrer uniquement des chiffres',
+                        ]"
                         autofocus
                         @keyup.enter="prompt = false"
-                        :value="20"
                       />
                     </div>
 
@@ -221,41 +218,76 @@
 
             <q-dialog
               v-model="handleUpdateModal"
-              @show="fetchFamilleList"
+              @show="fetchSiteList"
               persistent
             >
               <q-card style="min-width: 350px">
-                <q-form @submit.stop="onModifService" class="q-pa-md">
+                <q-form @submit.stop="onModifRayon" class="q-pa-md">
                   <q-card-section>
                     <div class="text-h6">Formulaire de modification</div>
                   </q-card-section>
 
                   <q-card-section class="q-pt-none">
-                    <q-input
-                      filled
-                      label="Nom du service"
-                      v-model="nom_service"
-                    />
-                  </q-card-section>
-                  <q-card-section class="q-pt-none">
-                    <q-input
-                      filled
-                      label="code comptable du service"
-                      v-model="codecompt_service"
-                    />
-                  </q-card-section>
-                  <q-card-section class="q-pt-none">
-                    <q-input filled label="TVA" v-model="tva" />
-                  </q-card-section>
-                  <q-card-section class="q-pt-none">
                     <div class="q-mb-md">
                       <q-select
                         filled
-                        v-model="model"
-                        :options="familleList"
-                        label="Veuillez choisir la famille du service"
+                        v-model="site"
+                        :options="siteList"
+                        label="Veuillez choisir le site"
                         emit-value
                         map-options
+                        readonly
+                      />
+                    </div>
+                  </q-card-section>
+                  <q-card-section class="q-pt-none">
+                    <div class="q-mb-md">
+                      <q-input
+                        filled
+                        label="Allée "
+                        v-model="allee"
+                        :rules="[(val) => !!val || 'Ce champ est obligatoire']"
+                        autofocus
+                        @keyup.enter="prompt = false"
+                      />
+                    </div>
+                  </q-card-section>
+
+                  <q-card-section class="q-pt-none">
+                    <div class="q-mb-md">
+                      <q-input
+                        filled
+                        label="Colonne"
+                        v-model="colonne"
+                        :rules="[(val) => !!val || 'Ce champ est obligatoire']"
+                        autofocus
+                        @keyup.enter="prompt = false"
+                      />
+                    </div>
+                  </q-card-section>
+
+                  <q-card-section class="q-pt-none">
+                    <div class="q-mb-md">
+                      <q-input
+                        filled
+                        label="Niveau"
+                        v-model="niveau"
+                        :rules="[(val) => !!val || 'Ce champ est obligatoire']"
+                        autofocus
+                        @keyup.enter="prompt = false"
+                      />
+                    </div>
+                  </q-card-section>
+
+                  <q-card-section class="q-pt-none">
+                    <div class="q-mb-md">
+                      <q-input
+                        filled
+                        label="Position "
+                        v-model="position"
+                        :rules="[(val) => !!val || 'Ce champ est obligatoire']"
+                        autofocus
+                        @keyup.enter="prompt = false"
                       />
                     </div>
                   </q-card-section>
@@ -265,31 +297,11 @@
                     <q-btn
                       flat
                       label="Modifier"
-                      @click="onModifService"
+                      @click="onModifRayon"
                       v-close-popup
                     />
                   </q-card-actions>
                 </q-form>
-              </q-card>
-            </q-dialog>
-
-            <q-dialog v-model="handleDeleteModal" persistent>
-              <q-card>
-                <q-card-section class="row items-center">
-                  <q-avatar icon="warning" color="warning" text-color="white" />
-                  <span class="q-ml-sm">Veuillez confirmer la suppression</span>
-                </q-card-section>
-
-                <q-card-actions align="right">
-                  <q-btn flat label="Annuler" color="primary" v-close-popup />
-                  <q-btn
-                    flat
-                    label="Confirmer"
-                    color="primary"
-                    @click="confirmDeleteService"
-                    v-close-popup
-                  />
-                </q-card-actions>
               </q-card>
             </q-dialog>
           </template>
@@ -315,145 +327,144 @@
 
 <script>
 import { computed, onMounted, ref } from "vue";
-import { useServiceStore } from "src/stores/service-store.js";
-import { getEmptyService } from "src/utils/getEmptyService.js";
 import { useRouter } from "vue-router";
+import { useRayonStore } from "src/stores/Rayon-store";
+import { getEmptyRayon } from "src/utils/getEmptyRayon";
 import { useQuasar } from "quasar";
 import * as XLSX from "xlsx";
-import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+
 export default {
   props: {
-    service: {
+    rayon: {
       type: Object,
-      default: getEmptyService(),
+      default: getEmptyRayon(),
     },
   },
 
-  setup() {
+  setup(props) {
+    const rayonStore = useRayonStore();
+    const rayonItem = ref({ id_rayonnage: null });
+    const addRayon = ref(false);
+    const site = ref(null);
     const router = useRouter();
     const $q = useQuasar();
+    const rayonData = ref(getEmptyRayon());
+    const allee = ref("");
+    const colonne = ref("");
+    const niveau = ref("");
+    const position = ref("");
 
-    const serviceStore = useServiceStore();
-    const computedRows = ref([]);
-    const handleDeleteModal = ref(false);
-    const model = ref(null);
-    const nom_service = ref("");
-    const tva = ref(20);
-    const codecompt_service = ref(null);
-    const serviceItem = ref({
-      nom_service: "",
-      codecompt_service: "",
-      tva: "",
-    });
-    const addService = ref(false);
-    const serviceData = ref(getEmptyService());
-    const columns = [
-      {
-        name: "id_service",
-        required: true,
-        label: "Id_service",
-        align: "center",
-        field: "id_service",
-        sortable: true,
-      },
-      {
-        name: "nom",
-        align: "center",
-        label: "Client",
-        field: "nom_service",
-        sortable: true,
-      },
-      {
-        name: "famille",
-        align: "center",
-        label: "famille",
-        field: (row) =>
-          row.familleService ? row.familleService.libelle_famille : "",
-        sortable: true,
-      },
-
-      {
-        name: "code",
-        align: "center",
-        label: "Code Comptable",
-        field: "codecompt_service",
-      },
-      {
-        name: "tva",
-        align: "center",
-        label: "TVA",
-        field: "tva",
-      },
-    ];
-
-    const services = computed(() => {
-      return serviceStore.services;
-    });
     async function onSubmit() {
-      console.log("données:", model.value);
-      const serviceData = {
-        familleService: {
-          id_famille: model.value,
+      console.log(
+        "Valeurs du formulaire : ",
+        site.value,
+        allee.value,
+        colonne.value,
+        niveau.value,
+        position.value
+      );
+      const rayonData = {
+        site: {
+          id_site: site.value,
         },
-        nom_service: nom_service.value, //le nom de la propriété en fonction de votre API
-        tva: tva.value,
-        codecompt_service: codecompt_service.value,
+        allee: allee.value,
+        colonne: colonne.value,
+        niveau: niveau.value,
+        position: position.value,
       };
-
       try {
-        console.log("avant submit", serviceData);
-        await serviceStore.addService(serviceData);
-        addService.value = false;
-        await serviceStore.listAllService();
+        console.log("avant submit", rayonData);
+        await rayonStore.addRayon(rayonData);
+        console.log("resultat", rayonData);
+        addRayon.value = false;
+        await rayonStore.listAllRayon();
         $q.notify({
-          message: "Service ajouté avec succès",
+          message: "Rayonnage ajouté avec succès",
           color: "positive",
           position: "top",
           timeout: 3000,
         });
-        await router.push("/Services");
+        await router.push("/RayonPage");
       } catch (error) {
         console.error("Une erreur s'est produite :", error);
         $q.notify({
-          message: "Ajout du service impossible",
+          message: "Ajout impossible",
           color: "negative",
           position: "bottom",
           timeout: 3000,
         });
       }
     }
-    const familleList = ref([]);
 
-    async function fetchFamilleList() {
+    const columns = [
+      {
+        name: "id_rayonnage",
+        align: "center",
+        label: "id_rayonnage",
+        field: "id_rayonnage",
+        sortable: true,
+      },
+      {
+        name: "site",
+        align: "center",
+        label: "site",
+        field: (row) => {
+          console.log("data", row);
+          return row.site ? row.site.site : "";
+        },
+        sortable: true,
+      },
+      {
+        name: "rayonnage",
+        align: "center",
+        label: "Rayonnage",
+        field: (row) =>
+          `${row.allee} - ${row.colonne} - ${row.niveau} - ${row.position}`,
+        sortable: true,
+      },
+    ];
+
+    const siteList = ref([]);
+
+    async function fetchSiteList() {
       try {
-        const familles = await serviceStore.listAllFamilles();
-        console.log("familles:", familles);
-        familleList.value = familles.map((famille) => ({
-          label: famille.libelle_famille,
-          value: famille.id_famille,
+        const sites = await rayonStore.listAllSite();
+        console.log("Sites:", sites);
+        siteList.value = sites.map((site) => ({
+          label: site.site,
+          value: site.id_site,
         }));
       } catch (error) {
         console.error(error);
       }
     }
+
     const handleUpdateModal = ref(false);
 
     async function handleInfoClick(Id) {
       try {
-        const serviceData = await serviceStore.getOneService(Id);
-        console.log("serviceData", serviceData);
+        const rayonData = await rayonStore.getOnerayon(Id);
+        console.log("rayonData", rayonData);
+        if (rayonData && rayonData.allee) {
+          console.log("rayonData", rayonData);
 
-        nom_service.value = serviceData.nom_service;
-        codecompt_service.value = serviceData.codecompt_service;
-        tva.value = serviceData.tva;
-        if (serviceData.familleService) {
-          model.value = serviceData.familleService.id_famille; // Mettez à jour model avec l'ID de la famille
+          allee.value = rayonData.allee;
+          colonne.value = rayonData.colonne;
+          niveau.value = rayonData.niveau;
+          position.value = rayonData.position;
+          if (rayonData.site) {
+            site.value = rayonData.site.id_site; // Mettez à jour model avec l'ID de la famille
+          }
+          rayonItem.value = {
+            ...rayonData,
+          };
+          handleUpdateModal.value = true;
+        } else {
+          console.error(
+            "Les données du rayon ne contiennent pas la propriété 'allee'."
+          );
         }
-        serviceItem.value = {
-          ...serviceData,
-        };
-        handleUpdateModal.value = true;
       } catch (error) {
         console.error(
           "Erreur lors de la récupération des données du site :",
@@ -462,86 +473,64 @@ export default {
       }
     }
 
-    async function onModifService() {
+    async function onModifRayon() {
       try {
-        const serviceId = serviceItem.value.id_service;
-
-        const updatedServiceData = {
-          nom_service: nom_service.value,
-          codecompt_service: codecompt_service.value,
-          tva: tva.value,
-          familleService: {
-            id_famille: model.value,
+        const rayonId = rayonItem.value.id_rayonnage; // avoir l'ID du site
+        console.log("rayonId", rayonId);
+        console.log("Valeur de site.value :", site.value);
+        console.log("Valeur de rayonItem.value.site :", rayonItem.value.site);
+        const updatedRayonData = {
+          allee: allee.value,
+          colonne: colonne.value,
+          niveau: niveau.value,
+          position: position.value,
+          site: {
+            id_site: site.value,
           },
           // ...
         };
-        if (model.value !== serviceItem.value.familleService.id_famille) {
-          updatedServiceData.familleService = {
-            id_famille: model.value,
+        if (
+          rayonItem.value.site &&
+          site.value !== rayonItem.value.site.id_site
+        ) {
+          updatedRayonData.site = {
+            id_site: site.value,
           };
         }
-        await serviceStore.updateService(serviceId, updatedServiceData);
-        handleUpdateModal.value = false;
-        await serviceStore.listAllService();
+        await rayonStore.updateRayon(rayonId, updatedRayonData);
+        handleUpdateModal.value = false; // Fermez le modal après la mise à jour
+        await rayonStore.listAllRayon();
         $q.notify({
-          message: "Service modifié avec succès",
+          message: "Rayonnage modifié avec succès",
           color: "positive",
           position: "top",
           timeout: 3000,
         });
       } catch (error) {
-        console.error("Une erreur s'est produite :", error);
-        $q.notify({
-          message: "Modification impossible",
-          color: "negative",
-          position: "bottom",
-          timeout: 3000,
-        });
+        console.error("Erreur lors de la mise à jour du rayonnage :", error);
       }
     }
 
-    function handleDeleteClick(id) {
-      console.log(" id_service:", id);
-      serviceItem.value.id = id;
-      handleDeleteModal.value = true;
-    }
-    async function confirmDeleteService() {
-      const id_serviceToDelete = serviceItem.value.id;
-
-      await serviceStore.deleteService(id_serviceToDelete);
-
-      handleDeleteModal.value = false;
-      await serviceStore.listAllService();
-      $q.notify({
-        message: "Service supprimé avec succès",
-        color: "positive",
-        position: "top",
-        timeout: 3000,
-      });
-    }
-
     function getAllDataFromDataTable() {
-      return services.value;
+      return rayons.value;
     }
     function exportToExcel() {
       const allData = getAllDataFromDataTable();
       const worksheet = XLSX.utils.json_to_sheet(allData);
       const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Sites");
+      XLSX.utils.book_append_sheet(workbook, worksheet, "rayons");
       const excelBuffer = XLSX.write(workbook, {
         bookType: "xlsx",
         type: "array",
       });
-
       const data = new Blob([excelBuffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
-
       const url = window.URL.createObjectURL(data);
       const a = document.createElement("a");
       document.body.appendChild(a);
       a.href = url;
-      a.download = "Services.xlsx";
+      a.download = "rayons.xlsx";
       a.click();
       document.body.removeChild(a);
     }
@@ -608,7 +597,7 @@ export default {
         unit: "mm",
         format: [pdfWidth, pdfHeight], // Définir la taille de la page
       });
-      pdf.text("Liste des services", 10, 10);
+      pdf.text("Liste des rayonnages", 10, 10);
 
       // Position de départ pour les données du tableau
       let y = 20;
@@ -633,37 +622,36 @@ export default {
         });
       });
 
-      pdf.save("listeSites.pdf");
+      pdf.save("liste des rayonnages.pdf");
     }
 
-    onMounted(async () => {
-      try {
-        serviceStore.listAllService();
-      } catch (error) {
-        console.error("Erreur lors de l'appel à listAllService :", error);
-      }
+    const rayons = computed(() => {
+      return rayonStore.rayons;
+    });
+
+    onMounted(() => {
+      rayonStore.listAllRayon();
     });
 
     return {
       filter: ref(""),
+      prompt: ref(false),
+      onSubmit,
       columns,
-      date: ref("2023/11/01"),
-      services,
-      addService,
-      handleDeleteModal,
-      handleDeleteClick,
-      confirmDeleteService,
+      rayonData,
+      site,
+      rayons,
+      rayonItem,
+      fetchSiteList,
       handleInfoClick,
       handleUpdateModal,
-      onModifService,
-      onSubmit,
-      serviceItem,
-      familleList,
-      fetchFamilleList,
-      model,
-      tva,
-      codecompt_service,
-      nom_service,
+      siteList,
+      addRayon,
+      allee,
+      colonne,
+      position,
+      niveau,
+      onModifRayon,
       exportToExcel,
       exportToPDF,
     };
@@ -676,11 +664,6 @@ export default {
   text-align: center;
 }
 
-#pdf-content {
-  font-family: "Arial", sans-serif;
-  color: #000; /* Couleur du texte */
-  /* Ajoutez d'autres styles au besoin */
-}
 .custom-btn-style2 {
   margin-right: 10px;
 }
@@ -688,7 +671,7 @@ export default {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  margin-bottom: 300px;
-  margin-right: 600px;
+  margin-bottom: 350px;
+  margin-right: 750px;
 }
 </style>

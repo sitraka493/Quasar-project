@@ -32,8 +32,8 @@
               size="sm"
               round
               dense
-              @click="handleUpdateClick(props.row.cab)"
-              icon="update"
+              @click="handleDeleteClick(props.row.cab)"
+              icon="delete"
               text-color="primary"
             />
           </q-td>
@@ -52,7 +52,7 @@
             {{ col.label }}
           </q-th>
           <q-th>Détails</q-th>
-          <q-th>Modifier</q-th>
+          <q-th>Supprimer</q-th>
         </q-tr>
       </template>
 
@@ -82,6 +82,25 @@
             <q-icon name="search" />
           </template>
         </q-input>
+        <q-dialog v-model="handleDelete" persistent>
+          <q-card>
+            <q-card-section class="row items-center">
+              <q-avatar icon="warning" color="warning" text-color="white" />
+              <span class="q-ml-sm">Veuillez confirmer la suppression</span>
+            </q-card-section>
+
+            <q-card-actions align="right">
+              <q-btn flat label="Annuler" color="primary" v-close-popup />
+              <q-btn
+                flat
+                label="Confirmer"
+                color="primary"
+                @click="confirmDelete"
+                v-close-popup
+              />
+            </q-card-actions>
+          </q-card>
+        </q-dialog>
       </template>
     </q-table>
     <div class="button-container">
@@ -108,12 +127,15 @@ import jsPDF from "jspdf";
 import { useRouter } from "vue-router";
 import * as XLSX from "xlsx";
 import html2canvas from "html2canvas";
-const archiveStore = useArchiveStore();
-const router = useRouter();
-
+import { useQuasar } from "quasar";
 export default {
   setup() {
     const archiveStore = useArchiveStore();
+    const archiveItem = ref("");
+    const $q = useQuasar();
+
+    const handleDelete = ref(false);
+
     const columns = [
       {
         name: "cab",
@@ -187,6 +209,28 @@ export default {
         console.error('Le routeur ou la méthode "push" ne sont pas définis.');
       }
     }
+
+    function handleDeleteClick(cab) {
+      console.log(" cab:", cab);
+      archiveItem.value = cab;
+      handleDelete.value = true;
+    }
+    async function confirmDelete() {
+      const cabToDelete = archiveItem.value;
+
+      await archiveStore.deleteArchive(cabToDelete);
+
+      handleDelete.value = false;
+
+      await archiveStore.listAllArchives();
+      $q.notify({
+        message: " Suppression effectuée avec succès",
+        color: "positive",
+        position: "top",
+        timeout: 3000,
+      });
+    }
+
     function getAllDataFromDataTable() {
       return archives.value;
     }
@@ -312,6 +356,10 @@ export default {
       archives,
       exportToPDF,
       exportToExcel,
+      handleDeleteClick,
+      handleDelete,
+      confirmDelete,
+      archiveItem,
     };
   },
 };

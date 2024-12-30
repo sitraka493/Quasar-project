@@ -16,7 +16,7 @@
       <q-btn push label="Gérer utilisateurs" icon="people" to="/Users" />
     </q-btn-group>
   </div>
-  <div style="margin-bottom: 0px">
+  <div>
     <q-page class="flex flex-center">
       <div id="pdf">
         <q-table
@@ -348,7 +348,12 @@ export default {
           timeout: 3000,
         });
       } catch (error) {
-        console.error("Erreur lors de la mise à jour du site :", error);
+        $q.notify({
+          message: "Modification impossible",
+          color: "negative",
+          position: "bottom",
+          timeout: 3000,
+        });
       }
     }
     function getAllDataFromDataTable() {
@@ -510,6 +515,6 @@ export default {
   flex-direction: row;
   align-items: flex-start;
   margin-bottom: 350px;
-  margin-right: 500px;
+  margin-right: 600px;
 }
 </style>

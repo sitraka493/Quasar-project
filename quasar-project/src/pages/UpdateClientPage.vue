@@ -14,6 +14,7 @@
                   v-model="client.nomClient"
                   label=""
                   margin-left="200px"
+                  :rules="[(val) => !!val || 'Ce champ est obligatoire']"
                 />
               </div>
 
@@ -22,6 +23,7 @@
                   filled
                   v-model="client.tel_client"
                   label="Numéro de Téléphone"
+                  :rules="[(val) => !!val || 'Ce champ est obligatoire']"
                 />
               </div>
             </div>
@@ -31,6 +33,7 @@
                   filled
                   v-model="client.adresse_client"
                   label="Adresse du client"
+                  :rules="[(val) => !!val || 'Ce champ est obligatoire']"
                 />
               </div>
 
@@ -39,6 +42,7 @@
                   filled
                   v-model="client.date_contrat"
                   label="Selectionnez une date"
+                  :rules="[(val) => !!val || 'Ce champ est obligatoire']"
                 >
                   <template v-slot:prepend>
                     <q-icon name="event" class="cursor-pointer">
@@ -71,10 +75,20 @@
 
             <div class="row">
               <div class="col">
-                <q-input filled v-model="client.email_client" label="Email" />
+                <q-input
+                  filled
+                  v-model="client.email_client"
+                  label="Email"
+                  :rules="[(val) => !!val || 'Ce champ est obligatoire']"
+                />
               </div>
               <div class="col">
-                <q-input filled v-model="client.fax_client" label="Fax" />
+                <q-input
+                  filled
+                  v-model="client.fax_client"
+                  label="Fax"
+                  :rules="[(val) => !!val || 'Ce champ est obligatoire']"
+                />
               </div>
             </div>
 
@@ -85,6 +99,7 @@
                   v-model="client.etat_client"
                   :options="options2"
                   label="Situation"
+                  :rules="[(val) => !!val || 'Ce champ est obligatoire']"
                 />
               </div>
 
@@ -94,6 +109,7 @@
                   v-model="client.règlement"
                   :options="options"
                   label="Règlement par"
+                  :rules="[(val) => !!val || 'Ce champ est obligatoire']"
                 />
               </div>
             </div>
@@ -103,6 +119,7 @@
                 filled
                 v-model="client.codecompt_client"
                 label="Code comptable"
+                :rules="[(val) => !!val || 'Ce champ est obligatoire']"
               />
             </div>
           </div>
@@ -148,15 +165,25 @@ export default {
       return clientStore.client;
     });
     async function onModif() {
-      console.log("essai2", client.value);
-      await clientStore.updateClient(clientId, client.value);
-      $q.notify({
-        message: "Client modifié succès",
-        color: "positive",
-        position: "bottom",
-        timeout: 3000,
-      });
-      router.push("/Client");
+      try {
+        console.log("essai2", client.value);
+        await clientStore.updateClient(clientId, client.value);
+        $q.notify({
+          message: "Client modifié succès",
+          color: "positive",
+          position: "bottom",
+          timeout: 3000,
+        });
+        router.push("/Client");
+      } catch (error) {
+        console.error("Une erreur s'est produite :", error);
+        $q.notify({
+          message: "Une erreur s'est produite lors de l'ajout du client",
+          color: "negative",
+          position: "bottom",
+          timeout: 3000,
+        });
+      }
     }
 
     onMounted(async () => {
